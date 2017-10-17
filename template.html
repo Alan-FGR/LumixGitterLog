@@ -94,11 +94,43 @@ td:nth-child(3){width: 100%;}
     padding: 10px!important;
 }
 
+
+#sucks {
+background-color: #ff0;
+top: 0;
+width: 20em;
+left: 0;
+border: 0.5em solid #f0f;
+background-image: url("https://i.imgur.com/jWr67J8.png");
+background-size: cover;
+text-shadow: 2px 2px #0ff,-2px -2px #0ff,-2px 2px #0ff,2px -2px #0ff, 0px 5px #f0f;
+color: #00f;
+font-weight: bolder !important;
+font-size: larger;
+}
+.sux {
+    all: unset;
+}
+.sux > tr, .sux > * > tr, .sux > * > * > td {
+    background: none;
+    border: 2px solid #0f0;
+    color: #00f !important;
+}
+
+
+
 </style>
 </head>
 <body>
 <div id="floatdiv">
-<span><b>Lumix Gitter Archive. Sucks Counter: [SUCKSCOUNTER] </b>| [SHITGOESHERE]</span>
+<span><b>Lumix Gitter Archive.
+<div class="tooltip">
+<span id="sucks" class="tooltiptext">
+[SUCKSCOUNTER]
+</span>
+<b>Sucks Counter</b>
+</div>
+</b>| [SHITGOESHERE]</span>
 <div class="tooltip">
 <span class="tooltiptext">Type a message number and press enter to go directly to it.</span>
 <input placeholder="Message #" type="text" id="msgnum">
