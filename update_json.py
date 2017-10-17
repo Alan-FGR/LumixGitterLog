@@ -26,7 +26,7 @@ for key in hist:
         sucksdict[usr] = 0;
 
 
-    sucksinmsg = msg.count("sux")+msg.count("suck");
+    sucksinmsg = msg.lower().count("sux")+msg.lower().count("suck");
     sucksdict[usr] += sucksinmsg;
     sucks += sucksinmsg;
 
@@ -46,7 +46,7 @@ for key in hist:
         'html': msg
     })
 
-#open("log.json", 'w').write(json.dumps(data))  # , indent=2))
+open("log.json", 'w').write(json.dumps(data))  # , indent=2))
 
 users.sort()
 users.insert(0,"All")
