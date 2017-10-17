@@ -1,0 +1,348 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.0.5/fuse.min.js"></script>
+
+<!-- EMOJIS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/emojify.js/0.9.5/emojify.min.js"></script>
+
+<style>
+body {font-family: sans-serif; padding-top: 4.5em;}
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+th, td {
+    text-align: left;
+    padding: 0.2em;
+}
+tr:nth-child(even){background-color: #eee}
+td:nth-child(1){color: #aaa}
+td:nth-child(2){font-weight: 900; text-align: right; border-right: 1px solid #ccc;}
+td:nth-child(3){width: 100%;}
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 300%;
+    background-color: #fea;
+    position: absolute;
+    z-index: 1;
+    top: 100%;
+    left: -220%;
+    white-space: normal;
+    padding: 0.5em;
+}
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+#help {
+	background-color: #aef;
+	top: 0;
+	width: 30em;
+	left: -30em;
+}
+.highlight {
+    font-weight: bold;
+	background-color: #aef;
+}
+#highlightmsg {
+	background-color: #dfa!important;
+}
+#user{
+    width: 8em;
+}
+#msgnum{
+    width: 5em;
+}
+#floatdiv {
+    position: fixed;
+    background: #dfa;
+    margin: 0;
+    padding: 0.5em;
+    top: 0;
+    left: 0;
+    white-space: nowrap;
+}
+#limitreached {
+    background-color: #f00;
+}
+.emoji {
+	height: 2em;
+	display: inline;
+	margin: -1em 0;
+}
+#gittertab {
+    background-color: #0a5;
+	line-height: 0.8em;
+	position: fixed;
+	right: 0;
+	top: 45%;
+	font-weight: 800;
+}
+.gitter-chat-embed-action-bar-item-pop-out {
+    margin-right: auto!important;
+}
+.gitter-chat-embed-action-bar-item-collapse-chat {
+    width: 100%!important;
+    height: 60px!important;
+    background-position-x: right!important;
+    background-size: 60px!important;
+    padding: 10px!important;
+}
+
+</style>
+</head>
+<body>
+<div id="floatdiv">
+<span><b>Lumix Gitter Archive. Sucks Counter: [SUCKSCOUNTER] </b>| [SHITGOESHERE]</span>
+<div class="tooltip">
+<span class="tooltiptext">Type a message number and press enter to go directly to it.</span>
+<input placeholder="Message #" type="text" id="msgnum">
+</div>
+<br>
+<input placeholder="Search... (press Enter)" type="text" id="filter">
+<span>User:</span>
+<select id="user">
+[USERSGOESHERE]
+</select>
+<!-- <input id="autosearch" type="checkbox">Automatic (or press Enter)</input> -->
+<span>Results:</span>
+<div class="tooltip">
+<span class="tooltiptext">If search is NOT fuzzy and you select 100 results, it searches as you type. This value sets to a minimum of 1000 if fuzzy search is on.</span>
+<select id="quantity">
+	<option value="100">100</option>
+	<option value="500">500</option>
+	<option value="1000">1000</option>
+	<option value="2000">2000</option>
+	<option value="5000">5000</option>
+	<option value="10000">10000</option>
+</select>
+</div>
+<input id="fuzzy" type="checkbox">Fuzzy search (needs beefy machine)</input>
+<div class="tooltip">
+<span id="help" class="tooltiptext">
+
+<h3>Welcome to the Atomic Logs!</h3>
+Feel free to <a href="https://gitter.im/AtomicGameEngine/AtomicGameEngine">join the chat</a>.<br>
+
+<h3>About</h3>
+This web page displays an easily searchable log archive for the Atomic Game Engine Gitter.<br>
+Chat logs are archived using <a href="https://github.com/Alan-FGR/GitterLogger">this tool, </a>
+and the output is parsed and this page is generated using <a href="https://github.com/Alan-FGR/AtomicGitterLog">this tool</a>.<br>
+
+<h3>Having problems?</h3>
+<a href="https://github.com/Alan-FGR/AtomicGitterLog/issues/new">Click here to open an issue on GitHub</a> or 
+<a href="https://gitter.im/AtomicGameEngine/AtomicGameEngine">join us on Gitter</a>.<br>
+
+<h3>Dev Links</h3>
+<a href="https://github.com/Alan-FGR/GitterLogger">https://github.com/Alan-FGR/GitterLogger</a><br>
+<a href="https://github.com/Alan-FGR/AtomicGitterLog">https://github.com/Alan-FGR/AtomicGitterLog</a><br>
+
+<h3>Licenses</h3>
+<a href="https://github.com/emojione/emojify.js/blob/master/LICENSE-IMAGES.md">Emoji Images License</a><br>
+<a href="https://github.com/emojione/emojify.js/blob/master/LICENSE.md">Emojify License</a><br>
+
+</span>
+<b>INFO</b>
+</div>
+<br>
+<span id="limitreached" style="display: none;">DISPLAY LIMIT REACHED! SOME RESULTS WILL NOT BE DISPLAYED!</span>
+</div>
+<table id="results"><tr><td><br><span id="loading">Downloading ~[SIZEGOESHERE]MiB of data... (may take some seconds on slow connections)</span></td></tr></table>
+<button id="gittertab" class="js-gitter-toggle-chat-button" onclick="loadGitter()"><<br><br>G<br>I<br>T<br>T<br>E<br>R<br><br>C<br>H<br>A<br>T<br><br><</button>
+</body>
+<script>
+var fuse, json;
+var searched = false;
+var showlimit = false;
+
+$(function() {
+    $.getJSON("log.json", function (data) {
+		json = data;
+		
+		$.when($("#loading").append("<b> [DONE!]</b><br><br>Parsing data and building search cache... (may take some seconds on slow processors)"))
+		.then(function() {		
+			for (i = 0; i < json.length; i++) {
+				json[i].mid = json.length-1-i;
+				json[i].txt = $("<div/>").html(json[i].html).text();//TODO see if there's something more efficient
+			};
+			
+			$("#loading").remove();
+			
+			$(window).on('hashchange',function(){ 
+				onInitCH(false);
+			});
+			onInitCH(true);
+		});
+		
+	});
+});
+
+$(window).on("load",function () {
+	emojify.setConfig({
+		img_dir: 'images/emoji',
+		tag_type:'ej',
+	});
+});
+
+function onInitCH(init){
+	var urlmsg = document.URL.split("#")[1];
+	if (!urlmsg || urlmsg === undefined){
+		if(!searched && init) populateLasts();
+	}
+	else{
+		goToMessage(urlmsg);
+	}
+}
+
+$('#filter').keyup(function(e) {
+	if(!$("#fuzzy").is(':checked') && $('#quantity').val() < 200) return updateInput(); //if we want few results and isn't fuzzy, autosearch
+	if(e.which != 13 && !$("#autosearch").is(':checked')) return;
+	updateInput();
+});
+
+$('#quantity').change(function(e) {
+	updateInput();
+});
+
+$('#user').change(function(e) {
+	updateInput();
+});
+
+var msghl = -1;
+$('#msgnum').keyup(function(e) {
+	if(e.which != 13) return;
+	goToMessage($('#msgnum').val());
+});
+
+function goToMessage(id){
+
+	$('#user').val("All");
+
+	var curMsg = json.length-1-id;
+	
+	var results = [];
+	var rStart = Math.max(0,curMsg-48);
+	var rEnd = Math.min(json.length,curMsg+49);
+	for (i = rStart; i < rEnd; i++) {
+		results.push(json[i]);
+	}
+	
+	msghl = id;
+	populateWithData(results);
+}
+
+function updateInput(){
+	if(json === undefined) return;
+	searched = true;
+	if(!$("#filter").val()) return populateLasts();
+
+	showlimit = true;
+
+	if($("#fuzzy").is(':checked')){
+	    if($('#quantity').val() < 1000) $('#quantity').val(1000)
+		fuse = new Fuse(json, {keys: ['txt'], threshold: 0.3, minMatchCharLength: 1});
+		populateWithData(fuse.search($("#filter").val()))
+	}
+	else{
+		var matches = [];
+		var keyword = $("#filter").val();
+		var c=0;
+		for (i = 0; i < json.length; i++) {
+			if(
+				json[i].txt.toLowerCase().indexOf(keyword.toLowerCase()) !== -1 //has match TODO strip html tags
+				//&&(
+				//$('#user').val() == "All" || json[i].user.toLowerCase() == user.toLowerCase() //user match exit TODO REFACTOR
+				//)
+			){
+				matches.push(json[i]);
+				c++;
+				//if (c>$('#quantity').val())	break;
+			}
+		};
+		populateWithData(matches);
+	}
+
+}
+
+function populateLasts(){
+	if (json){
+	    showlimit = false;
+		populateWithData(json);
+	};
+}
+
+function populateWithData(data){
+	$("#results").empty();
+	$("#limitreached").toggle(false);
+	var user = $('#user').val().toLowerCase();
+	var max = $('#quantity').val()
+	var c = 0;
+	var kw = $("#filter").val();
+	var scrollToHL = false;
+
+	for (i = 0; i < data.length; i++) {
+		if(user == "all" || data[i].user.toLowerCase() == user){
+			var msg;
+			if(kw && kw.length > 2)
+				msg = data[i].html.replace(new RegExp("(" + kw + ")(?!([^<]+)?>)", 'ig'), '<span class="highlight">$1</span>');
+			else
+				msg = data[i].html;
+		
+			var resHtml = '<tr><td><a href="#'+data[i].mid+'"><small>'+data[i].date+"<br>#"+data[i].mid+"</small></a></td><td>"+data[i].user+"</td><td><ej>"+msg+"</ej></td></tr>";
+			if(msghl >= 0 && data[i].mid == msghl){
+				resHtml = resHtml.substr(0, 3) + ' id="highlightmsg"' + resHtml.substr(3);
+				scrollToHL=true;
+				msghl=-1;
+			}
+						
+			//$("#results").append("<tr><td>"+data[i].date+"</td><td>"+data[i].user+"</td><td>"+msg+"</td></tr>");
+			$("#results").prepend(resHtml);
+			c++; if (c>max)	{
+			    if(showlimit)
+			        $("#limitreached").toggle(true);
+			    break;
+            };
+		}
+	};
+	msghl = -1;
+	emojify.run();
+	if(scrollToHL)
+		$('html,body').animate({scrollTop: $("#highlightmsg").offset().top-120},"fast");
+	else
+		$('html,body').animate({scrollTop: document.body.scrollHeight},"fast");
+	
+	
+}
+
+
+//GITTER STUFF BROKEN AF :( hacky uglily workarounded 
+var gitterloaded = false;
+var normtxt = ''
+function loadGitter(){
+	if (gitterloaded) return;
+	gitterloaded = true;
+	normtxt = $("#gittertab").html();
+	$("#gittertab").html("W<br>A<br>I<br>T");
+	$.getScript( 'https://sidecar.gitter.im/dist/sidecar.v1.js', function( data, textStatus, jqxhr ) {
+		$("#gittertab").html(normtxt);
+    } );
+}
+
+//document.addEventListener('gitter-sidecar-ready', function(e) {
+//  e.detail.Chat.toggleChat(false);
+//});
+
+((window.gitter = {}).chat = {}).options = {
+	room: 'nem0/LumixEngine',
+	showChatByDefault: true,
+	activationElement: '#gittertab',  //TOTALLY BROKEN SHIT when line before is true: WORKAROUNDING...
+};
+
+</script>
+<!-- <script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script> -->
+</html>
