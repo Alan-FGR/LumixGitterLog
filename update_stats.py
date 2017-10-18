@@ -4,7 +4,7 @@ from collections import OrderedDict
 hist = OrderedDict(json.load(open("../../__atomic_gitter_logs/lumixLog.txt", 'r')))
 
 counters = {
-    "suck":["sux", "suck"],
+    "sucks":["sux", "suck"],
     "jesus":["gees","jees","geez","jeez","jesu","gesu","jebu"],
     "shit":["shit","sheesh","crap"],
     "trollface":["trollface"]
