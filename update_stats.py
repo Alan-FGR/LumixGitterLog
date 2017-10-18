@@ -78,12 +78,12 @@ plt.savefig('piechart.png', bbox_inches='tight')
 num_users,top_scores,vals = GetPlottableVals(12)
 
 fig, ax = plt.subplots(figsize=(8, 4))
-plt.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.15)
+plt.subplots_adjust(left=0.07, right=0.95, top=0.9, bottom=0.2)
 bar_locations = np.arange(num_users)
 last_vals = [100]*num_users
 
 ax.set_xticks([x for x in range(num_users)])
-ax.set_xticklabels([name for name in sorted_scores], rotation=-20)
+ax.set_xticklabels([name for name in sorted_scores], rotation=-30, ha="left")
 ax.set(title='TOP '+str(num_users)+' BARS')
 
 for score in range(4):
@@ -92,7 +92,7 @@ for score in range(4):
         last_vals[user] += vals[user][score]
 
 plt.legend(handles=patches)
-
+# plt.show()
 plt.savefig('plot.png', bbox_inches='tight')
 #END PLOTTING
 
